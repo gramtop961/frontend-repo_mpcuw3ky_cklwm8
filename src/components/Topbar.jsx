@@ -1,7 +1,7 @@
 import { ShoppingCart, User, Search, Menu, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 
-export default function Topbar() {
+export default function Topbar({ onCartClick, cartCount = 0 }) {
   const [query, setQuery] = useState('');
 
   return (
@@ -35,9 +35,11 @@ export default function Topbar() {
           <button className="grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-[#252932] text-white/80 transition hover:border-white/20 hover:bg-[#2b3040]">
             <User className="h-4 w-4" />
           </button>
-          <button className="relative grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-[#5B8FA8] text-white transition hover:brightness-110">
+          <button onClick={onCartClick} className="relative grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-[#5B8FA8] text-white transition hover:brightness-110">
             <ShoppingCart className="h-4 w-4" />
-            <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-white text-[10px] font-semibold text-[#0F1117]">2</span>
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-white text-[10px] font-semibold text-[#0F1117]">{cartCount}</span>
+            )}
           </button>
           <button className="grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-[#252932] text-white/80 transition hover:border-white/20 hover:bg-[#2b3040] md:hidden">
             <Menu className="h-4 w-4" />

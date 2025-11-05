@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Filter, Star, Plus, Upload } from 'lucide-react';
+import ProductView from './ProductView.jsx';
 
 const demoProducts = [
   { id: 'p1', name: 'DTF Transfer Sheet – A3', price: 3.9, rating: 4.8, img: 'https://images.unsplash.com/photo-1520974735194-6cde52d85e14?q=80&w=800&auto=format&fit=crop' },
@@ -8,17 +9,12 @@ const demoProducts = [
   { id: 'p4', name: 'Sticker Vinyl – Gloss', price: 1.2, rating: 4.7, img: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?q=80&w=800&auto=format&fit=crop' },
 ];
 
-function ProductCard({ product, onQuickView }) {
+function ProductCard({ product, onOpen }) {
   return (
-    <div className="group overflow-hidden rounded-lg border border-white/10 bg-[#252932] transition hover:border-white/20">
+    <button onClick={() => onOpen(product)} className="group overflow-hidden rounded-lg border border-white/10 bg-[#252932] text-left transition hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-[#5B8FA8]/30">
       <div className="relative aspect-[4/3] overflow-hidden">
-        <img src={product.img} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
-        <button
-          onClick={() => onQuickView(product)}
-          className="absolute right-2 top-2 rounded-md border border-white/10 bg-[#1A1D24]/80 px-2 py-1 text-xs text-white/80 opacity-0 backdrop-blur transition group-hover:opacity-100"
-        >
-          Quick view
-        </button>
+        <img src={product.img} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" loading="lazy" decoding="async" />
+        <span className="pointer-events-none absolute right-2 top-2 rounded-md border border-white/10 bg-[#1A1D24]/80 px-2 py-1 text-xs text-white/80 backdrop-blur">Quick view</span>
       </div>
       <div className="space-y-1 p-3">
         <div className="flex items-start justify-between gap-2">
@@ -29,44 +25,24 @@ function ProductCard({ product, onQuickView }) {
         </div>
         <div className="flex items-center justify-between">
           <p className="text-white">${product.price.toFixed(2)}</p>
-          <button className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#1A1D24] px-2 py-1 text-xs text-white/80 transition hover:border-white/20 hover:bg-[#2b3040]">
-            <Plus className="h-3.5 w-3.5" /> Add
-          </button>
+          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#1A1D24] px-2 py-1 text-xs text-white/60">
+            <Plus className="h-3.5 w-3.5" /> Details
+          </span>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
 
-function QuickView({ product, onClose }) {
-  if (!product) return null;
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" role="dialog" aria-modal>
-      <div className="w-full max-w-xl overflow-hidden rounded-lg border border-white/10 bg-[#1A1D24] shadow-2xl">
-        <div className="relative aspect-video w-full">
-          <img src={product.img} alt={product.name} className="h-full w-full object-cover" />
-        </div>
-        <div className="p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-medium text-white">{product.name}</h3>
-              <p className="mt-1 text-sm text-white/70">Ultra-fine dot pattern, stretch-safe adhesive for cotton, blends, and performance wear.</p>
-            </div>
-            <button onClick={onClose} className="rounded-md border border-white/10 px-2 py-1 text-sm text-white/70 hover:border-white/20">Close</button>
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-xl font-semibold text-white">${product.price.toFixed(2)}</p>
-            <button className="rounded-md bg-[#5B8FA8] px-4 py-2 text-sm font-medium text-white transition hover:brightness-110">Add to cart</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function Workspace() {
+export default function Workspace({ onAddToCart }) {
   const [filter, setFilter] = useState('all');
-  const [quick, setQuick] = useState(null);
+  const [selected, setSelected] = useState(null);
+
+  const filtered = useMemo(() => {
+    return demoProducts.filter((p) =>
+      filter === 'all' ? true : filter === 'dtf' ? p.id === 'p1' || p.id === 'p4' : p.id === 'p2' || p.id === 'p3'
+    );
+  }, [filter]);
 
   return (
     <section id="catalog" className="mx-auto grid max-w-7xl gap-6 px-4 py-8 lg:grid-cols-3">
@@ -85,13 +61,9 @@ export default function Workspace() {
           </div>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {demoProducts
-            .filter((p) =>
-              filter === 'all' ? true : filter === 'dtf' ? p.id === 'p1' || p.id === 'p4' : p.id === 'p2' || p.id === 'p3'
-            )
-            .map((p) => (
-              <ProductCard key={p.id} product={p} onQuickView={setQuick} />
-            ))}
+          {filtered.map((p) => (
+            <ProductCard key={p.id} product={p} onOpen={setSelected} />
+          ))}
         </div>
       </div>
 
@@ -123,7 +95,15 @@ export default function Workspace() {
         </div>
       </div>
 
-      <QuickView product={quick} onClose={() => setQuick(null)} />
+      <ProductView
+        product={selected}
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        onAdd={(p) => {
+          onAddToCart?.(p);
+          setSelected(null);
+        }}
+      />
     </section>
   );
 }
